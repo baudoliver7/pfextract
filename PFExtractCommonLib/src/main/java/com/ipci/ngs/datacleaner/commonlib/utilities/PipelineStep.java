@@ -1,0 +1,20 @@
+package com.ipci.ngs.datacleaner.commonlib.utilities;
+
+public enum PipelineStep {
+	NONE,
+	CLIP,
+	FILTER_QUALITY,
+	REMOVE_NS,
+	MIN_LENGTH,
+	PAIRED_READS,
+	MAPPED,
+	BAM_TO_FASTQ,
+	UNMAPPED_GH,
+	MAPPED_3D7,
+	ADD_READGROUPS,
+	SORT_BAM,
+	MARK_DUPLICATED,
+	REMOVE_DUPLICATED,
+	INDEX_REFERENCE,
+	VISUALIZE
+}
