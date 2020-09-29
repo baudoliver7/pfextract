@@ -3,7 +3,7 @@
   <groupId>com.ipci.ngs.pfextract.commonlib</groupId>
   <artifactId>PFExtractCommonLib</artifactId>
   <version>0.0.1</version>
-  <name>IPCI NGS Data Cleaner CommonLib</name>
+  <name>PFExtract CommonLib</name>
   
   <dependencies>
 	<dependency>

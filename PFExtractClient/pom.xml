@@ -4,7 +4,7 @@
   <groupId>com.ipci.ngs.pfextract.client</groupId>
   <artifactId>PFExtractClient</artifactId>
   <version>0.0.1</version>
-  <name>IPCI NGS Data Cleaner Client</name>
+  <name>PFExtract Client</name>
   
   <dependencies>
 	<dependency>
@@ -34,7 +34,11 @@
 	    <artifactId>jgoodies-forms</artifactId>
 	    <version>1.8.0</version>
 	</dependency>
-  	
+  	<dependency>
+        <groupId>org.knowm.xchart</groupId>
+        <artifactId>xchart</artifactId>
+        <version>3.6.5</version>
+    </dependency>
   </dependencies>
   
   <build>

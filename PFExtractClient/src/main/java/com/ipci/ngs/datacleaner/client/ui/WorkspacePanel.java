@@ -7,7 +7,6 @@ import javax.swing.JScrollPane;
 import com.jgoodies.forms.layout.FormLayout;
 import com.ipci.ngs.datacleaner.commonlib.pipeline.PipelineCommand;
 import com.ipci.ngs.datacleaner.commonlib.pipeline.PipelineCommandImpl;
-import com.ipci.ngs.datacleaner.commonlib.reads.ExtractionStats;
 import com.ipci.ngs.datacleaner.commonlib.reads.ReadEntryType;
 import com.ipci.ngs.datacleaner.commonlib.reads.ReadStats;
 import com.ipci.ngs.datacleaner.commonlib.reads.Workspace;
@@ -31,11 +30,16 @@ import javax.swing.table.AbstractTableModel;
 import javax.swing.table.TableCellRenderer;
 import javax.swing.table.TableColumn;
 
+import org.knowm.xchart.PieChart;
+import org.knowm.xchart.PieChartBuilder;
+import org.knowm.xchart.XChartPanel;
+
 import javax.swing.ButtonGroup;
 import javax.swing.DefaultCellEditor;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
 
+import java.awt.Color;
 import java.awt.Component;
 import java.awt.FlowLayout;
 import java.awt.event.ActionListener;
@@ -54,6 +58,7 @@ public class WorkspacePanel extends JPanel {
 	private final OutputTableModel model;
 	private final JTable tableStats;
 	private final StatsTableModel statsModel;
+	private final PieChart chart;
 
 	/**
 	 * Create the panel.
@@ -69,6 +74,8 @@ public class WorkspacePanel extends JPanel {
 			new RowSpec[] {
 				FormSpecs.RELATED_GAP_ROWSPEC,
 				RowSpec.decode("fill:200px"),
+				FormSpecs.RELATED_GAP_ROWSPEC,
+				RowSpec.decode("default:grow"),
 				FormSpecs.RELATED_GAP_ROWSPEC,
 				RowSpec.decode("default:grow"),
 				FormSpecs.RELATED_GAP_ROWSPEC,
@@ -213,7 +220,7 @@ public class WorkspacePanel extends JPanel {
 		panel_3.add(btnRunPipeline);
 		
 		JPanel panel_1 = new JPanel();
-		add(panel_1, "2, 4, fill, fill");
+		add(panel_1, "2, 4, 1, 3, fill, fill");
 		panel_1.setLayout(new FormLayout(new ColumnSpec[] {
 				FormSpecs.RELATED_GAP_COLSPEC,
 				ColumnSpec.decode("default:grow"),},
@@ -315,7 +322,7 @@ public class WorkspacePanel extends JPanel {
 		panel_4.add(new JScrollPane(tableStats), "2, 4, fill, fill");
 		
 		JPanel panel_2 = new JPanel();
-		add(panel_2, "2, 6, 3, 1");
+		add(panel_2, "2, 8, 3, 1");
 		panel_2.setLayout(new FlowLayout(FlowLayout.RIGHT, 5, 5));
 		
 		JButton btnVisualize_1 = new JButton("Visualize");
@@ -373,8 +380,57 @@ public class WorkspacePanel extends JPanel {
 			btnVisualize2.setVisible(true);
 		}
 		
+		// 
+		chart = new PieChartBuilder().width(800).height(600).title("Distribution of reads").build();
+		
+		// Customize Chart
+	    Color[] sliceColors = new Color[] { new Color(224, 68, 14), new Color(230, 105, 62), new Color(246, 199, 182) };
+	    chart.getStyler().setSeriesColors(sliceColors);
+	    
+	    // Series
+	    chart.addSeries("3D7", 0);
+	    chart.addSeries("GH", 0);
+	    chart.addSeries("QC", 0);
+	    // chart.addSeries("Autres", 0);
+	    
+	    // chart
+	    final JPanel chartPanel = new XChartPanel<PieChart>(chart);
+	    add(chartPanel, "4, 6, fill, fill");
+	    chartPanel.setLayout(new FormLayout(new ColumnSpec[] {
+				FormSpecs.RELATED_GAP_COLSPEC,
+				ColumnSpec.decode("default:grow"),},
+			new RowSpec[] {
+				FormSpecs.RELATED_GAP_ROWSPEC,
+				FormSpecs.DEFAULT_ROWSPEC,
+				FormSpecs.RELATED_GAP_ROWSPEC,
+				RowSpec.decode("default:grow"),}));
+		
 		model.refresh(workspace.outputs());
-		statsModel.refresh(workspace.stats()); 
+		statsModel.refresh(workspace.stats());
+		refreshCharts(workspace.stats());
+	}
+	
+	private void refreshCharts(List<ReadStats> stats) {
+
+		final long readsTotalNumber = stats.stream().filter(c -> c.step().equals("Begin")).findFirst().get().numberOfReads();
+		
+		final long troisD7ReadsNumber = stats.stream().filter(c -> c.step().equals("Map 3D7")).findFirst().get().numberOfReads();		
+	    chart.updatePieSeries("3D7", troisD7ReadsNumber);
+	    
+	    final long ghReadsNumber = stats.stream().filter(c -> c.step().equals("Map GH")).findFirst().get().numberOfReads();
+	    chart.updatePieSeries("GH", ghReadsNumber);
+	    
+	    long lastQcStepReadNumber = 0L;
+	    for (ReadStats readStats : stats) {
+			if(readStats.step().equals("Clip") || readStats.step().equals("Filter quality") || readStats.step().equals("Remove Ns") || readStats.step().equals("Min length") || readStats.step().equals("Pair read")) {
+				lastQcStepReadNumber = readStats.numberOfReads();
+			}
+		}
+	    	    
+	    chart.updatePieSeries("QC", readsTotalNumber - lastQcStepReadNumber);
+	    
+	    /* final long otherReadsNumber = stats.stream().filter(c -> c.step().equals("Unmap 3D7")).findFirst().get().numberOfReads();
+	    chart.updatePieSeries("Autres", otherReadsNumber);*/
 	}
 	
 	public static String weightStr(double weightInGo) {
@@ -392,10 +448,6 @@ public class WorkspacePanel extends JPanel {
 		}
 		
 		return weightStr;
-	}
-	
-	public void loadStats(ExtractionStats extractionStats) {
-		
 	}
 }
 
