@@ -410,23 +410,31 @@ public class WorkspacePanel extends JPanel {
 		refreshCharts(workspace.stats());
 	}
 	
-	private void refreshCharts(List<ReadStats> stats) {
-
-		final long readsTotalNumber = stats.stream().filter(c -> c.step().equals("Begin")).findFirst().get().numberOfReads();
+	private long readsNumberOf(List<ReadStats> stats, String ... steps) {
 		
-		final long troisD7ReadsNumber = stats.stream().filter(c -> c.step().equals("Map 3D7")).findFirst().get().numberOfReads();		
-	    chart.updatePieSeries("3D7", troisD7ReadsNumber);
-	    
-	    final long ghReadsNumber = stats.stream().filter(c -> c.step().equals("Map GH")).findFirst().get().numberOfReads();
-	    chart.updatePieSeries("GH", ghReadsNumber);
-	    
-	    long lastQcStepReadNumber = 0L;
-	    for (ReadStats readStats : stats) {
-			if(readStats.step().equals("Clip") || readStats.step().equals("Filter quality") || readStats.step().equals("Remove Ns") || readStats.step().equals("Min length") || readStats.step().equals("Pair read")) {
-				lastQcStepReadNumber = readStats.numberOfReads();
+		long number = 0L;
+		for (String step : steps) {
+			for (ReadStats readStats : stats) {
+				if(readStats.step().equals(step)) {
+					number = readStats.numberOfReads();
+				}
 			}
 		}
-	    	    
+		
+		return number;
+	}
+	
+	private void refreshCharts(List<ReadStats> stats) {
+
+		final long readsTotalNumber = readsNumberOf(stats, "Begin");
+		
+		final long troisD7ReadsNumber = readsNumberOf(stats, "Map 3D7");
+	    chart.updatePieSeries("3D7", troisD7ReadsNumber);
+	    
+	    final long ghReadsNumber = readsNumberOf(stats, "Map GH");
+	    chart.updatePieSeries("GH", ghReadsNumber);
+	    
+	    long lastQcStepReadNumber = readsNumberOf(stats, "Clip", "Filter quality", "Remove Ns", "Min length", "Pair read");	    
 	    chart.updatePieSeries("QC", readsTotalNumber - lastQcStepReadNumber);
 	    
 	    /* final long otherReadsNumber = stats.stream().filter(c -> c.step().equals("Unmap 3D7")).findFirst().get().numberOfReads();
